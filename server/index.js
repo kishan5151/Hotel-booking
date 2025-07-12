@@ -12,7 +12,14 @@ dotenv.config({ path: "./config/config.env" });
 connectDb();
 
 const app = express();
+
+app.use(express.json());
+app.use(cors());
+app.use(express.urlencoded());
+app.use(morgan("dev"));
+
 const port = process.env.PORT || 8000;
+
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
