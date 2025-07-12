@@ -2,8 +2,9 @@
 
 import { User } from "../models/user.model.js";
 import JWT from "jsonwebtoken";
+import AppError from "../utils/AppError.js";
 
-export const registerController = async (req, res) => {
+export const registerController = async (req, res, next) => {
   try {
     //get reqeste
     const {
@@ -20,19 +21,13 @@ export const registerController = async (req, res) => {
     } = req.body;
 
     if (!username || !email || !password || !imageUrl) {
-      return res.status(400).json({
-        success: false,
-        error: "Incomplete information",
-      });
+      return next(new AppError("Incomplete information", 400));
     }
 
     //check if user already is not login
     const user = await User.findOne({ email });
     if (user) {
-      return res.status(400).json({
-        success: false,
-        error: "User already exist",
-      });
+      return next(new AppError("User already exist", 400));
     }
 
     //create new schema object
@@ -56,22 +51,16 @@ export const registerController = async (req, res) => {
       message: "User create successfully",
     });
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      error: "Something want wrong",
-    });
+    next(error);
   }
 };
 
-export const loginController = async (req, res) => {
+export const loginController = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     console.log(email, password);
     if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        error: "Email or Password is required",
-      });
+      return next(new AppError("Email or Password is required", 400));
     }
 
     //get user detail
@@ -85,10 +74,7 @@ export const loginController = async (req, res) => {
 
     const isValidPassword = await user.comaprePassword(password);
     if (!isValidPassword) {
-      return res.status(400).json({
-        success: false,
-        error: "Email or Password is incorrect",
-      });
+      return new AppError("Email or Password is incorrect", 400);
     }
 
     //toke generation
@@ -109,9 +95,6 @@ export const loginController = async (req, res) => {
     });
   } catch (error) {
     console.log(error.message);
-    res.status(400).json({
-      success: false,
-      message: "Something want wrong",
-    });
+    next(error);
   }
 };
