@@ -1,6 +1,7 @@
 /** @format */
 
 import mongoose from "mongoose";
+import bcrypt from "bcrypt";
 
 const userSchema = new mongoose.Schema(
   {
@@ -33,27 +34,35 @@ const userSchema = new mongoose.Schema(
     address: {
       street: {
         type: String,
-        required: true,
       },
       city: {
         type: String,
-        required: true,
       },
       state: {
         type: String,
-        required: true,
       },
       postalCode: {
         type: String,
-        required: true,
       },
       country: {
         type: String,
-        required: true,
       },
     },
   },
   { timestamps: true }
 );
+
+//Hash password before save
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
+
+//comapare password at login time
+userSchema.methods.comaprePassword = async function (noramlPassword) {
+  return await bcrypt.compare(noramlPassword, this.password);
+};
 
 export const User = mongoose.model("User", userSchema);
